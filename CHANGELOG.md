@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/albuquerque/DroidAdMob-for-Godot/compare/v1.0.0...v1.0.1) (2025-12-12)
+
+
+### Bug Fixes
+
+* remove deprecated upload-release-asset actions ([a64d273](https://github.com/albuquerque/DroidAdMob-for-Godot/commit/a64d273d8ea49a527f45f13f7c4ace338385d3f9))
+
 # 1.0.0 (2025-12-12)
 
 
