@@ -66,36 +66,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Release Asset
+      - name: Display Release Info
         if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
-          asset_path: ./dist/DroidAdMob.zip
-          asset_name: DroidAdMob-${{ steps.semantic.outputs.new_release_version }}.zip
-          asset_content_type: application/zip
-
-      - name: Upload debug AAR
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
-          asset_path: ./plugin/build/outputs/aar/DroidAdMob-debug.aar
-          asset_name: DroidAdMob-debug.aar
-          asset_content_type: application/octet-stream
-
-      - name: Upload release AAR
-        if: steps.semantic.outputs.new_release_published == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
-          asset_path: ./plugin/build/outputs/aar/DroidAdMob-release.aar
-          asset_name: DroidAdMob-release.aar
-          asset_content_type: application/octet-stream
+        run: |
+          echo "New release published: ${{ steps.semantic.outputs.new_release_version }}"
+          echo "Release notes: ${{ steps.semantic.outputs.new_release_notes }}"
 
