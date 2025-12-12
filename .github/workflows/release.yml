@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build plugin
+        run: ./gradlew clean assemble --no-daemon
+
+      - name: Create plugin package
+        run: |
+          # Create distribution directory
+          mkdir -p dist/DroidAdMob
+          
+          # Copy AAR files
+          mkdir -p dist/DroidAdMob/bin/debug
+          mkdir -p dist/DroidAdMob/bin/release
+          cp plugin/build/outputs/aar/DroidAdMob-debug.aar dist/DroidAdMob/bin/debug/
+          cp plugin/build/outputs/aar/DroidAdMob-release.aar dist/DroidAdMob/bin/release/
+          
+          # Copy export scripts
+          cp plugin/export_scripts_template/plugin.cfg dist/DroidAdMob/
+          cp plugin/export_scripts_template/export_plugin.gd dist/DroidAdMob/
+          cp plugin/export_scripts_template/admob.gd dist/DroidAdMob/
+          
+          # Copy documentation
+          cp README.md dist/DroidAdMob/
+          cp LICENSE dist/DroidAdMob/
+          
+          # Create zip
+          cd dist
+          zip -r DroidAdMob.zip DroidAdMob/
+          cd ..
+          
+          # Verify package
+          echo "Package contents:"
+          unzip -l dist/DroidAdMob.zip
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        id: semantic
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
+          asset_path: ./dist/DroidAdMob.zip
+          asset_name: DroidAdMob-${{ steps.semantic.outputs.new_release_version }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload debug AAR
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
+          asset_path: ./plugin/build/outputs/aar/DroidAdMob-debug.aar
+          asset_name: DroidAdMob-debug.aar
+          asset_content_type: application/octet-stream
+
+      - name: Upload release AAR
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.semantic.outputs.new_release_upload_url }}
+          asset_path: ./plugin/build/outputs/aar/DroidAdMob-release.aar
+          asset_name: DroidAdMob-release.aar
+          asset_content_type: application/octet-stream
+
